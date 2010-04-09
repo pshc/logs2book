@@ -30,9 +30,11 @@ header = r"""\documentclass[twocolumn]{book}
 
 \definecolor{grey}{gray}{0.75}
 \newcommand{\grey}[1]{\textcolor{grey}{#1}}
-\newcommand{\name}[1]{\textsf{\small{#1}}}
+\newcommand{\nick}[1]{\textsf{\small{#1}}}
+\newcommand{\bracketnick}[1]{\nick{{\raise.30ex\hbox{\small$\langle\,$}}#1{\raise.30ex\hbox{\small$\,\rangle$}}}}
+\newcommand{\act}[1]{\textit{#1}}
 \newcommand{\actstar}{*\hspace*{-0.15em}}
-\newcommand{\metabullet}{\grey{$\triangleright$}}
+\newcommand{\metabullet}{\grey{$\triangleright$}\hspace*{-0.15em}}
 \newcommand{\degrees}{$^\circ$}
 \newcommand{\urlind}{\textsc{{\scriptsize[}url{\scriptsize]}}}
 
@@ -112,8 +114,12 @@ def comma_join(list):
     elif len(list) == 2: return '%s and %s' % tuple(list)
     return '%s, and %s' % (', '.join(list[:-1]), list[-1])
 
+nick_chars = r'[a-zA-Z_\[\]\\`^{|}][\w\[\]\\`^{|}\-]{0,12}'
+nick_re = re.compile(r'(?:^|\s)(<NC>|\* NC)\s'.replace('NC', nick_chars))
 
-def prettify_line(line, wrap):
+more_re = re.compile('(\(\d\d? more messages?\))$')
+
+def prettify_line(nick, line, wrap):
     if len(line) > 1 and line.startswith('"') and line.endswith('"'):
         wrap = u"``{}%s{}''" % wrap
         line = line[1:-1]
@@ -124,8 +130,27 @@ def prettify_line(line, wrap):
         line = u'$\\uparrow$%s' % escape_line(line[1:])
     elif re.match(url_re + '$', line):
         line = r'\small{http{}://%s}' % escape_line(line[7:])
+    elif nick == 'cantide' and nick_re.search(line):
+        pieces = nick_re.split(line)
+        first_bit = escape_line(pieces.pop(0))
+        first_bit += first_bit.strip() and ' '
+        quotes = []
+        while pieces:
+            nick = pieces.pop(0)
+            q = pieces.pop(0)
+            if not q: # yes, twice
+                q += ' ' + pieces.pop(0)
+                q += ' ' + pieces.pop(0)
+            q = escape_line(q)
+            if nick.startswith('* '):
+                q = r'* \act{%s %s}' % (escape_line(nick[2:]), q)
+            else:
+                q = r'\bracketnick{%s} %s' % (escape_line(nick[1:-1]), q)
+            quotes.append(q)
+        line = '%s%s' % (first_bit, '\n\n'.join(quotes))
     else:
         line = escape_line(line)
+    line = more_re.sub(lambda m: r'\textit{%s}' % m.group(1), line)
     return line, wrap
 
 class Meta:
@@ -134,13 +159,35 @@ class Meta:
         self.name = name
         self.msgs = msgs
 
+mode_re = re.compile(r'sets mode:\s+([+\-][a-zA-Z+\-]+)\s+(.+)')
+
 def extract_meta(line):
     nick, msg = line[3:].strip().lower().split(None, 1)
     if msg == 'has quit irc' or msg == 'has left #uweng':
         msg = 'left'
     elif msg == 'has joined #uweng':
         msg = 'joined'
-    else: # TODO: chanserv, kicks, bans, modes, leaves
+    elif msg.startswith('sets mode:'):
+        m = mode_re.match(msg)
+        assert m, 'Unrecognized mode syntax: ' + msg
+        def parse_modes(state, char):
+            accum, pm = state
+            return (accum, char) if char in '+-' else (accum + [pm+char], pm)
+        modes, pm = reduce(parse_modes, m.group(1), ([], '+'))
+        args = m.group(2).split()
+        nm = args[0]
+        if all(a == args[0] for a in args):
+            credit = lambda s: (s if nick in ['chanserv', 'x']
+                                  else s + ' by ' + nick)
+            if '+o' in modes and '-o' not in modes:
+                nick, msg = nm, credit('was opped')
+            elif '-o' in modes and '+o' not in modes:
+                nick, msg = nm, credit('was deopped')
+            elif '+v' in modes and '-v' not in modes:
+                nick, msg = nm, credit('was voiced')
+            elif '-v' in modes and '+v' not in modes:
+                nick, msg = nm, credit('was devoiced')
+    else: # TODO: kicks, bans
         pass
     return Meta(nick, [msg])
 
@@ -236,7 +283,7 @@ def convert(log_filename):
             last_name = None
             left = r'\actstar'
             line = line[1:].strip()
-            wrap_line = ur'\textit{%s}' % wrap_line
+            wrap_line = ur'\act{%s}' % wrap_line
         else:
             # chat
             assert line.startswith('<')
@@ -248,8 +295,8 @@ def convert(log_filename):
             else:
                 if line == '!lst':
                     state.cantide_lst = True
-                line, wrap_line = prettify_line(line, wrap_line)
-            left = ur'\name{%s}' % escape_fragment(name)
+                line, wrap_line = prettify_line(name, line, wrap_line)
+            left = ur'\nick{%s}' % escape_fragment(name)
             if name != last_name:
                 last_name = name
             else:
