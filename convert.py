@@ -27,7 +27,7 @@ header = r"""\documentclass[twocolumn]{book}
 % from http://stackoverflow.com/questions/256457/how-does-one-insert-a-backslash-or-a-tilde-into-latex
 \newcommand{\mytilde}{{\raise.17ex\hbox{$\scriptstyle\mathtt{\sim}$}}}
 
-\definecolor{grey}{gray}{0.75}
+\definecolor{grey}{gray}{0.5}
 \newcommand{\grey}[1]{\textcolor{grey}{#1}}
 \newcommand{\nick}[1]{\textsf{\small{#1}}}
 \newcommand{\bracketnick}[1]{\nick{{\raise.30ex\hbox{\small$\langle\,$}}#1{\raise.30ex\hbox{\small$\,\rangle$}}}}
