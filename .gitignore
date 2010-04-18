@@ -3,4 +3,6 @@
 *.swp
 *.pdf
 *.tex
+*.pyc
 *~
+settings.py

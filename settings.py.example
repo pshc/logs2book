@@ -1,0 +1,8 @@
+SETTINGS = {
+        '$CHANNEL': '\\#foo',
+        '$URL': 'http://example.com/',
+        '$TIMEFRAME': 'April 2010',
+        '$YEAR_PUBLISHED': '2010',
+        '$DEDICATION': 'For Bob Loblaw',
+}
+

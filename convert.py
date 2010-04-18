@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 import datetime
 import re
+import settings
 
-header = r"""\documentclass[twocolumn]{book}
+HEADER = r"""\documentclass[twocolumn]{book}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[bitstream-charter]{mathdesign}
 \usepackage{color}
 
+\usepackage{multicol}
 \setlength{\columnsep}{1in}
 \flushbottom
 \newcommand{\onleft}[1]{\makebox[0em][r]{{#1}\hspace*{0.1in}}}
@@ -38,10 +40,54 @@ header = r"""\documentclass[twocolumn]{book}
 \newcommand{\urlind}{\textsc{{\scriptsize[}url{\scriptsize]}}}
 
 \begin{document}
+\begin{titlepage}
+\begin{flushright}
+
+{\LARGE $CHANNEL}
+
+{\Large $TIMEFRAME}
+
+\end{flushright}
+\end{titlepage}
+
+\onecolumn
+
+% Meta
+\thispagestyle{empty}
+\begin{center}
+\small
+
+This book is not for consumption by non-humans.
+
+No reproduction of any part may take place.
+
+\vspace{1em}
+
+\copyright $CHANNEL, $YEAR_PUBLISHED
+
+\vspace{1em}
+
+$URL
+
+\end{center}
+\newpage
+
+\begin{center}
+\thispagestyle{empty}
+$DEDICATION
+\end{center}
+\newpage
+
+\mbox{} % Blank page
+\thispagestyle{empty}
+\newpage
+
+% Content
+\twocolumn
 
 """
 
-footer = r"""
+FOOTER = r"""
 
 \end{document}
 """
@@ -303,7 +349,9 @@ def convert(log_filename):
 
         output(**locals())
 
-    all = u'%s%s%s' % (header, '\n\n'.join(state.converted), footer)
+    header = reduce(lambda h, r: h.replace(r[0], r[1]),
+            settings.SETTINGS.iteritems(), HEADER)
+    all = u'%s%s%s' % (header, '\n\n'.join(state.converted), FOOTER)
     return all.encode('utf-8')
 
 if __name__ == '__main__':
