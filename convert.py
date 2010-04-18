@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import datetime
-import dateutil.parser
 import re
 
 header = r"""\documentclass[twocolumn]{book}
@@ -260,8 +259,8 @@ def convert(log_filename):
         timestamp, sp, line = line.partition('  ')
 
         line = line.strip().decode('utf-8')
-        this_time = dateutil.parser.parse(timestamp).timetuple()[:5]
-
+        this_time = datetime.datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S'
+                ).timetuple()[:5]
         if line.startswith('***'):
             # meta info
             last_name = None
