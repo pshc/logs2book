@@ -1,10 +1,10 @@
-all: fools.log.pdf
+all: mmm.log.pdf
 
 %.log.pdf: %.log.tex
 	pdflatex $<
 
-fools.log.tex: convert.py
-	./convert.py fools.log
+%.log.tex: %.log convert.py
+	./convert.py $<
 
 clean:
 	rm *.aux *.log.log
