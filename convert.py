@@ -139,6 +139,7 @@ regexp_replacements = [(re.compile(k), v) for k, v in {
     r'(?<!\S)(-?[1-4]?\d(?:\.\d)?\*[cC]?)(?!\S)':
         lambda s: s.replace('*', '\\degrees{}'),
     r'(\^-?\d+(?:\.\d+)?)': lambda n: '$^{%s}$' % n.replace(escapes['^'], ''),
+    r"(?<=\s)/(I|(?!qg|ck|hr|br|stuff)[a-zA-Z'\-]{2,})/(?=\s|$)": '\\textit{%s}',
 }.iteritems()]
 
 def escape_fragment(frag):
