@@ -165,6 +165,9 @@ nick_re = re.compile(r'(?:^|\s)(<NC>|\* NC)\s'.replace('NC', nick_chars))
 
 more_re = re.compile('(\(\d\d? more messages?\))$')
 
+vote_re = re.compile(r'Question: .* -- Results: Yes: (\d+) -- No: (\d+) --\s*$'
+        .replace(' ', '\\s+'))
+
 def prettify_line(nick, line, wrap):
     if len(line) > 1 and line.startswith('"') and line.endswith('"'):
         wrap = u"``{}%s{}''" % wrap
@@ -176,7 +179,7 @@ def prettify_line(nick, line, wrap):
         line = u'$\\uparrow$%s' % escape_line(line[1:])
     elif re.match(url_re + '$', line):
         line = r'\small{http{}://%s}' % escape_line(line[7:])
-    elif nick == 'cantide' and nick_re.search(line):
+    elif is_bot(nick) and nick_re.search(line): # format !rq
         pieces = nick_re.split(line)
         first_bit = escape_line(pieces.pop(0))
         first_bit += first_bit.strip() and ' '
@@ -194,6 +197,9 @@ def prettify_line(nick, line, wrap):
                 q = r'\bracketnick{%s} %s' % (escape_line(nick[1:-1]), q)
             quotes.append(q)
         line = '%s%s' % (first_bit, '\n\n'.join(quotes))
+    elif is_bot(nick) and vote_re.match(line):
+        m = vote_re.match(line)
+        line = '%s --- %s' % m.groups()
     else:
         line = escape_line(line)
     line = more_re.sub(lambda m: r'\textit{%s}' % m.group(1), line)
@@ -262,12 +268,15 @@ def format_time(hour, minute):
     else:
         return (hour - 12, minute, 'p.m.')
 
+def is_bot(nick):
+    return nick.startswith('canti')
+
 class State:
-    __slots__ = ['last_time', 'converted', 'cantide_lst']
+    __slots__ = ['last_time', 'converted', 'bot_lst']
     def __init__(self):
         self.last_time = tuple()
         self.converted = []
-        self.cantide_lst = False
+        self.bot_lst = False
 
 def convert(log_filename):
     last_name = None
@@ -335,12 +344,12 @@ def convert(log_filename):
             assert line.startswith('<')
             name, r, line = line.lstrip('<').partition('>')
             line = line.strip()
-            if name == 'cantide' and state.cantide_lst and len(line) > 300:
-                state.cantide_lst = False
+            if is_bot(name) and state.bot_lst and len(line) > 300:
+                state.bot_lst = False
                 line = ur'\ldots'
             else:
                 if line == '!lst':
-                    state.cantide_lst = True
+                    state.bot_lst = True
                 line, wrap_line = prettify_line(name, line, wrap_line)
             left = ur'\nick{%s}' % escape_fragment(name)
             if name != last_name:
