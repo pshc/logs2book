@@ -39,6 +39,9 @@ HEADER = r"""\documentclass[twocolumn]{book}
 \newcommand{\metabullet}{\grey{$\triangleright$}\hspace*{-0.15em}}
 \newcommand{\smaller}[1]{\footnotesize{#1}}
 \newcommand{\degrees}{$^\circ$}
+\newcommand{\caret}{\symbol{94}}
+\newcommand{\fslash}{\symbol{92}}
+\newcommand{\lbr}{\linebreak[3]}
 \newcommand{\placeholder}[1]{\textsc{{\scriptsize[}#1{\scriptsize]}}}
 
 \begin{document}
@@ -98,7 +101,7 @@ escapes = dict(line.strip().split(' ', 1) for line in r"""
     $ \$
     _ \_
     # \#
-    ^ \symbol{94}
+    ^ \caret{}
     & \&
     { \{
     } \}
@@ -106,11 +109,11 @@ escapes = dict(line.strip().split(' ', 1) for line in r"""
     ] {]}
     < \textless{}
     > \textgreater{}
-    \ \symbol{92}
+    \ \fslash{}
     ~ $\mytilde$
     - -{}
-    / /\linebreak[3]
-    @ @\linebreak[3]
+    / /\lbr{}
+    @ @\lbr{}
     ` \`{}
 """.split(u'\n') if line.strip())
 
