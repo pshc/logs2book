@@ -119,11 +119,18 @@ escapes['\x02'] = u'\\bf'
 url_re = r'''(http://\S+(?<![,.;:\]*!'"<>]))'''
 url_line_re = re.compile(url_re + '$')
 
-fbcdn_re = re.compile(r'http:/[^/]*/[^/]+\.fbcdn\.net')
+domain_re = re.compile(r'http:/[^/]*/[^/]*?([a-zA-Z0-9\-.]+)(?:/|$)')
+blacklist_domains = {
+    'fbcdn.net': 'fb pic',
+    'maps.google.com': 'google map', 'maps.google.ca': 'google map',
+}
 
 def blacklist_url(url):
-    m = fbcdn_re.match(url)
-    return u'\\placeholder{fb pic}' if m else False
+    domain = domain_re.match(url).group(1)
+    for d, repl in blacklist_domains.iteritems():
+        if domain.endswith(d):
+            return u'\\placeholder{%s}' % repl
+    return False
 
 def footnote_url(url):
     return blacklist_url(url) or u'\\placeholder{url}\\footnote{%s}' % url
