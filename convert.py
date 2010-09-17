@@ -37,7 +37,7 @@ HEADER = r"""\documentclass[twocolumn]{book}
 \newcommand{\actstar}{*\hspace*{-0.15em}}
 \newcommand{\metabullet}{\grey{$\triangleright$}\hspace*{-0.15em}}
 \newcommand{\degrees}{$^\circ$}
-\newcommand{\urlind}{\textsc{{\scriptsize[}url{\scriptsize]}}}
+\newcommand{\placeholder}[1]{\textsc{{\scriptsize[}#1{\scriptsize]}}}
 
 \begin{document}
 \begin{titlepage}
@@ -115,13 +115,23 @@ escapes = dict(line.strip().split(' ', 1) for line in r"""
 escapes['\x02'] = u'\\bf'
 
 url_re = r'''(http://\S+(?<![,.;:\]*!'"<>]))'''
+url_line_re = re.compile(url_re + '$')
+
+fbcdn_re = re.compile(r'http:/[^/]*/[^/]+\.fbcdn\.net')
+
+def blacklist_url(url):
+    m = fbcdn_re.match(url)
+    return u'\\placeholder{fb pic}' if m else False
+
+def footnote_url(url):
+    return blacklist_url(url) or u'\\placeholder{url}\\footnote{%s}' % url
 
 simple_replacements = {
     "i'm": "I'm", "i'd": "I'd", "i've": "I've", "i'll": "I'll",
 }
 
 regexp_replacements = [(re.compile(k), v) for k, v in {
-    url_re: u'\\urlind\\footnote{%s}',
+    url_re: footnote_url,
     '<3': ur'$\heartsuit$',
     r'(?<!\.)(\.{3,5})(?!\.)': ur'\ldots{}',
     r'(?<!\S)(-?[1-4]?\d(?:\.\d)?\*[cC]?)(?!\S)':
@@ -176,8 +186,9 @@ def prettify_line(nick, line, wrap):
             line = line[1:]
     if line.startswith('^') and line.count('^') == 1:
         line = u'$\\uparrow$%s' % escape_line(line[1:])
-    elif re.match(url_re + '$', line):
-        line = r'\small{http{}://%s}' % escape_line(line[7:])
+    elif url_line_re.match(line):
+        line = blacklist_url(line) or (r'\small{http{}://%s}'
+                                       % escape_line(line[7:]))
     elif is_bot(nick) and nick_re.search(line): # format !rq
         pieces = nick_re.split(line)
         first_bit = escape_line(pieces.pop(0))
