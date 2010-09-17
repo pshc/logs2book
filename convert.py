@@ -133,26 +133,25 @@ def escape_fragment(frag):
     frag = u''.join(escapes.get(c, c) for c in frag)
     return frag
 
-def escape_line(line, multis=None):
-    if multis is None:
-        for k, v in simple_replacements.iteritems():
-            line = line.replace(k, v)
-        multis = regexp_replacements
-    if not multis:
+def escape_recurse_regexps(line, regexps):
+    if not regexps:
         return escape_fragment(line)
-    regexp, repl = multis[0]
+    regexp, repl = regexps[0]
     output = []
-    mid = True
-    for frag in regexp.split(line):
-        frag = escape_line(frag, multis[1:])
-        mid = not mid
-        if not mid:
+    for index, frag in enumerate(regexp.split(line)):
+        frag = escape_recurse_regexps(frag, regexps[1:])
+        if index % 2 == 0:
             output.append(frag)
         elif isinstance(repl, basestring):
             output.append(repl % frag if '%s' in repl else repl)
-        else:
+        else: # lambda
             output.append(repl(frag))
     return ''.join(output)
+
+def escape_line(line):
+    for k, v in simple_replacements.iteritems():
+        line = line.replace(k, v)
+    return escape_recurse_regexps(line, regexp_replacements)
 
 def comma_join(list):
     if len(list) == 0: return ''
