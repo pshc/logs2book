@@ -163,7 +163,7 @@ def comma_join(list):
 nick_chars = r'[a-zA-Z_\[\]\\`^{|}][\w\[\]\\`^{|}\-]{0,12}'
 nick_re = re.compile(r'(?:^|\s)(<NC>|\* NC)\s'.replace('NC', nick_chars))
 
-more_re = re.compile('(\(\d\d? more messages?\))$')
+more_re = re.compile(r'(\(\d\d? more messages?\))$')
 
 vote_re = re.compile(r'Question: .* -- Results: Yes: (\d+) -- No: (\d+) --\s*$'
         .replace(' ', '\\s+'))
