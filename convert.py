@@ -108,6 +108,7 @@ escapes = dict(line.strip().split(' ', 1) for line in r"""
     ~ $\mytilde$
     - -{}
     / /\linebreak[3]
+    @ @\linebreak[3]
     ` \`{}
 """.split(u'\n') if line.strip())
 
