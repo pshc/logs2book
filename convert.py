@@ -37,6 +37,7 @@ HEADER = r"""\documentclass[twocolumn]{book}
 \newcommand{\act}[1]{\textit{#1}}
 \newcommand{\actstar}{*\hspace*{-0.15em}}
 \newcommand{\metabullet}{\grey{$\triangleright$}\hspace*{-0.15em}}
+\newcommand{\smaller}[1]{\footnotesize{#1}}
 \newcommand{\degrees}{$^\circ$}
 \newcommand{\placeholder}[1]{\textsc{{\scriptsize[}#1{\scriptsize]}}}
 
@@ -169,6 +170,12 @@ def comma_join(list):
     elif len(list) == 1: return list[0]
     elif len(list) == 2: return '%s and %s' % tuple(list)
     return '%s, and %s' % (', '.join(list[:-1]), list[-1])
+
+is_wide = lambda char: char.isupper() or char == '_'
+def format_nick(nick):
+    if len(nick) > 9 and len(filter(is_wide, nick)) > 5:
+        return ur'\smaller{%s}\ldots' % escape_fragment(nick[:6])
+    return escape_fragment(nick)
 
 nick_chars = r'[a-zA-Z_\[\]\\`^{|}][\w\[\]\\`^{|}\-]{0,12}'
 nick_re = re.compile(r'(?:^|\s)(<NC>|\* NC)\s'.replace('NC', nick_chars))
@@ -363,10 +370,10 @@ def convert(log_filename):
                     state.bot_lst = True
                 line, wrap_line = prettify_line(name, line, wrap_line)
             if name != last_name:
-                left = ur'\nick{%s}' % escape_fragment(name)
+                left = ur'\nick{%s}' % format_nick(name)
                 last_name = name
             else:
-                left = ur'\cont{%s}' % escape_fragment(name)
+                left = ur'\cont{%s}' % format_nick(name)
 
         output(**locals())
 
