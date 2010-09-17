@@ -13,7 +13,7 @@ HEADER = r"""\documentclass[twocolumn]{book}
 \usepackage{multicol}
 \setlength{\columnsep}{1in}
 \flushbottom
-\newcommand{\onleft}[1]{\makebox[0em][r]{{#1}\hspace*{0.1in}}}
+\newcommand{\lft}[1]{\makebox[0em][r]{{#1}\hspace*{0.1in}}}
 \setlength{\oddsidemargin}{2em}
 \setlength{\parindent}{0em}
 
@@ -32,6 +32,7 @@ HEADER = r"""\documentclass[twocolumn]{book}
 \definecolor{grey}{gray}{0.5}
 \newcommand{\grey}[1]{\textcolor{grey}{#1}}
 \newcommand{\nick}[1]{\textsf{\small{#1}}}
+\newcommand{\cont}[1]{\grey{\nick{#1}}}
 \newcommand{\bracketnick}[1]{\nick{{\raise.30ex\hbox{\small$\langle\,$}}#1{\raise.30ex\hbox{\small$\,\rangle$}}}}
 \newcommand{\act}[1]{\textit{#1}}
 \newcommand{\actstar}{*\hspace*{-0.15em}}
@@ -315,7 +316,7 @@ def convert(log_filename):
 
         wrap_line = u'{%s}' % wrap_line
         if left or right:
-            wrap_line = ur'\onleft{%s}{%s}' % (left, wrap_line)
+            wrap_line = ur'\lft{%s}{%s}' % (left, wrap_line)
 
         state.converted.append(wrap_line % line)
 
@@ -361,11 +362,11 @@ def convert(log_filename):
                 if line == '!lst':
                     state.bot_lst = True
                 line, wrap_line = prettify_line(name, line, wrap_line)
-            left = ur'\nick{%s}' % escape_fragment(name)
             if name != last_name:
+                left = ur'\nick{%s}' % escape_fragment(name)
                 last_name = name
             else:
-                left = ur'\grey{%s}' % left
+                left = ur'\cont{%s}' % escape_fragment(name)
 
         output(**locals())
 
