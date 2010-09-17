@@ -333,7 +333,11 @@ def convert(log_filename):
         wrap_line = u'%s'
         timestamp, sp, line = line.partition('  ')
 
-        line = line.strip().decode('utf-8')
+        line = line.strip()
+        try:
+            line = line.decode('utf-8')
+        except UnicodeDecodeError:
+            line = line.decode('ISO-8859-1')
         this_time = datetime.datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S'
                 ).timetuple()[:5]
         if line.startswith('***'):
